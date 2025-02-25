@@ -1,7 +1,14 @@
  const bcrypt = require("bcrypt") 
- function passwordEncrypter (req,res,next){
-     req.password = bcrypt.hash(req.password,10)
-    next()
+ async function passwordEncrypter (req,res,next){
+     try{
+        const userPassword = await req.body.password
+        req.body.password = await bcrypt.hash(userPassword,10)
+        next()
+    }
+    catch(err){
+        console.log("Unable to hash")
+        res.json({error:"Enter a valid password"}).status(500);
+    }
 }
 
 module.exports = passwordEncrypter;

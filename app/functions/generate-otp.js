@@ -4,5 +4,5 @@ module.exports = function(){
         const randomInt = Math.floor(Math.random() * 10)
         otp.push(randomInt)
     }
-    return otp.join()
+    return otp.join("")
 }

@@ -1,13 +1,27 @@
-
+const mongoose = require('mongoose');
 const express =  require("express");
 const passwordEncrypter = require("./middleware/passwordEncrypt");
 const generateOTP = require("./functions/generate-otp")
 const {User,Product} = require("./DB/models")
  const bcrypt = require("bcrypt"); 
 const bodyParser = require("body-parser");
+const cors = require("cors");
+
+mongoose.connect('mongodb://localhost/lukustore')
+ .then(() => console.log('Connected to MongoDB...'))
+ .catch(err => console.error('Could not connect to MongoDB...'));
 
 const app = express()
-app.use(bodyParser.json({limit:100000}))
+app.use(bodyParser.json({limit:"10mb"}))
+
+app.use(
+    cors({
+      origin: "http://localhost:5173", // Allow frontend to access backend
+      methods: "GET, POST, PUT, DELETE", // Allowed methods
+      allowedHeaders: "Content-Type, Authorization", // Allow headers
+    })
+  );
+  
 
 /*
 
@@ -84,31 +98,23 @@ request body example:
 {
     firstName:"first",
     lastName:"last",
-    userName:"userName",
-    phoneNumber:"0768****",
+    
     email:"kelvin@gmail.com",
     password:"1234"
 }
 */
 app.post("/auth/verify-account-data",async (req,res) => {
     try {
-        const {firstName,lastName,userName,password,email,phoneNumber} = await req.body
-        if (!firstName || !lastName || !userName || !password || !email || !phoneNumber){
+        const {firstName,lastName,password,email} = await req.body
+        if (!firstName || !lastName || !password || !email){
             res.json({error:"Please fill all the field in the form."}).status(400)
-            return
-        }
-        if (await User.find({userName}) > 0){
-            res.json({error:"Username is already registered"}).status(400)
             return
         }
         if (await User.find({email}) > 0){
             res.json({error:"Email is already registered"}).status(400)
             return
         }
-        if (await User.find({phoneNumber}) > 0){
-            res.json({error:"Phone number is already registered"}).status(400)
-            return
-        }
+        
         //Typeof OTP = string
         const OTP = generateOTP()
         res.json({OTP}).status(200)
@@ -134,15 +140,14 @@ app.post("/auth/verify-account-data",async (req,res) => {
 app.post("/auth/create-account",passwordEncrypter,async (req,res) => {
     try {
         const reqBody = await req.body 
-        const checkUser = await User.find({$or:[{email:reqBody.email},{phoneNumber:reqBody.phoneNumber},{userName:reqBody.userName}]})
+        const checkUser = await User.find({$or:[{email:reqBody.email},{phoneNumber:reqBody.phoneNumber}]})
         if (checkUser.length > 0) {
-            res.json({error:"Such account already exists"}).status(400)
-            return
+            return res.status(400).json({ error: "Such account already exists" });
         }
         const newUser = await new User(req.body)
         newUser.save()
-        const {_id,firstName,lastName,userName,phoneNumber,email} = newUser
-        res.json({_id,firstName,lastName,userName,phoneNumber,email}).status(200)
+        const {_id,firstName,lastName,phoneNumber,email} = newUser
+        res.json({_id,firstName,lastName,phoneNumber,email}).status(200)
     } catch (error) {
         console.log(error)
         res.status(500).json({error:"Oops...Something went wrong."})
@@ -207,7 +212,7 @@ app.get("/search",async (req,res) => {
     seller:"seller'sID",
 }
 */
-app.put("/products",async (req,res) => {
+app.post("/products",async (req,res) => {
     try {
         const newProduct = await new Product(req.body)
         await newProduct.save()

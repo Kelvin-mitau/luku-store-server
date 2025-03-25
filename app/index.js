@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const express =  require("express");
 const passwordEncrypter = require("./middleware/passwordEncrypt");
-const generateOTP = require("./functions/generate-otp")
+const {generateOTP,authenticateOTP} = require("./functions/handleOTP")
 const {User,Product} = require("./DB/models")
  const bcrypt = require("bcrypt"); 
 const bodyParser = require("body-parser");
@@ -105,7 +105,7 @@ request body example:
 */
 app.post("/auth/verify-account-data",async (req,res) => {
     try {
-        const {firstName,lastName,password,email} = await req.body
+        const {firstName,lastName,password,email,phoneNumber} = await req.body
         if (!firstName || !lastName || !password || !email){
             res.json({error:"Please fill all the field in the form."}).status(400)
             return
@@ -114,10 +114,15 @@ app.post("/auth/verify-account-data",async (req,res) => {
             res.json({error:"Email is already registered"}).status(400)
             return
         }
+        if (await User.find({phoneNumber}) > 0){
+            res.json({error:"Phone number is already registered"}).status(400)
+            return
+        }
         
         //Typeof OTP = string
         const OTP = generateOTP()
-        res.json({OTP}).status(200)
+        console.log(OTP) //Should send otp via email/sms
+        res.json({}).status(200)
     } catch (error) {
         console.error(error)
         res.json({error:"Oops...Something went wrong."}).status(500)
@@ -140,17 +145,20 @@ app.post("/auth/verify-account-data",async (req,res) => {
 app.post("/auth/create-account",passwordEncrypter,async (req,res) => {
     try {
         const reqBody = await req.body 
+        if (!authenticateOTP(reqBody.otp)){
+            return res.status(400).json({ error: "Invalid OTP token" });
+        }
         const checkUser = await User.find({$or:[{email:reqBody.email},{phoneNumber:reqBody.phoneNumber}]})
         if (checkUser.length > 0) {
             return res.status(400).json({ error: "Such account already exists" });
         }
         const newUser = await new User(req.body)
         newUser.save()
-        const {_id,firstName,lastName,phoneNumber,email} = newUser
-        res.json({_id,firstName,lastName,phoneNumber,email}).status(200)
+        const {_id} = newUser
+        return res.json({_id}).status(200)
     } catch (error) {
-        console.log(error)
-        res.status(500).json({error:"Oops...Something went wrong."})
+        console.error(error)
+        return res.status(500).json({error:"Oops...Something went wrong."})
     }
 })
 

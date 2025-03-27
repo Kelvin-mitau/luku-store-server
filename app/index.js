@@ -76,12 +76,13 @@ app.get("/user", async (req,res) => {
 */
 app.post("/auth/sign-in",async (req,res) => {
     try {
-        const reqBody = await req.body
-        const users = await User.find({$or:[{email:identity},{username:identity}]})
-        if (users.length > 0){
-            if (bcrypt.compare(reqBody.password,users[0].password)){
-                res.json(users[0]).status(200)
+        const {identity,password} = await req.body
+        const user = await User.findOne({$or:[{email:identity},{username:identity}]})
+        if (user){
+            if (bcrypt.compare(password,user.password)){
+                res.json({userID:user._id}).status(200)
             }  
+            else {return res.json({error:"You entered incorrent details."}).status(200)}
             return
         }
          res.json({error:"You entered incorrent details."}).status(200)

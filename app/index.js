@@ -112,11 +112,11 @@ app.post("/auth/verify-account-data",async (req,res) => {
             return
         }
         if (await User.find({email}) > 0){
-            res.json({error:"Email is already registered"}).status(400)
+            res.json({error:"Email is already registered."}).status(400)
             return
         }
         if (await User.find({phoneNumber}) > 0){
-            res.json({error:"Phone number is already registered"}).status(400)
+            res.json({error:"Phone number is already registered."}).status(400)
             return
         }
         

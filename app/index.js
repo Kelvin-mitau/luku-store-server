@@ -180,6 +180,26 @@ app.get("/products",async (req,res) => {
     }
 })
 
+app.get("/products", async (req, res) => {
+    try {
+        const { category } = req.query; // Get category from query params
+
+        if (!category) {
+            return res.status(400).json({ message: "Category is required" });
+        }
+
+        const products = await Product.find({ category: category });
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: "No products found" });
+        }
+
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+});
+
 
 //Searching for a product
 //Sample endpoint : /search?query=shorts 

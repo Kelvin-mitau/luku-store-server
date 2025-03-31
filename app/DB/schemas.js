@@ -6,11 +6,12 @@ const productSchema = new Schema(
     name:{type:String,required:true},
     description:{type:String,required:true},
     brand:{type:String,required:true},
+    quantity:{type:Number, default:1},
     sex:{type:String,required:true},
     category:{type:String,required:true},
     price:{type:Number,required:true},
     seller:{type:String,required:true},
-     createdAt:Date
+    createdAt:Date
     }
 ,{timestamps:{createdAt:"createdAt"}})
 

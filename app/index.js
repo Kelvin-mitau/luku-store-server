@@ -3,13 +3,13 @@ const express =  require("express");
 const passwordEncrypter = require("./middleware/passwordEncrypt");
 const {generateOTP,authenticateOTP} = require("./functions/handleOTP")
 const {User,Product} = require("./DB/models")
- const bcrypt = require("bcrypt"); 
+const bcrypt = require("bcrypt"); 
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
 mongoose.connect('mongodb://localhost/lukustore')
- .then(() => console.log('Connected to MongoDB...'))
- .catch(err => console.error('Could not connect to MongoDB...'));
+.then(() => console.log('Connected to MongoDB...'))
+.catch(err => console.error('Could not connect to MongoDB...'));
 
 const app = express()
 app.use(bodyParser.json({limit:"10mb"}))
@@ -38,21 +38,43 @@ app.use(
     email:"kelvin@gmail.com",
 }
  */
-app.get("/user", async (req,res) => {
-    try {
-        const {id} = req.query
-        const user = await User.findById(id) 
-        if (!user){
-            res.status(500).json({error:"This account does not exist."})
-            return
-        }
-        res.status(200).json(user)
+// app.get("/user", async (req,res) => {
+//     try {
+//         const {id} = req.query
+//         const user = await User.findById(id) 
+//         if (!user){
+//             res.status(500).json({error:"This account does not exist."})
+//             return
+//         }
+//         res.status(200).json(user)
         
+//     } catch (error) {
+//         console.log("Querying user data error" ,err)
+//         res.status(500).json({error:"Oops...Something went wrong."})
+//     }
+// })
+
+app.get('/users', async (req, res) => {
+    try {
+      const users = await User.find().select('-password'); // Exclude passwords
+      res.json(users);
     } catch (error) {
-        console.log("Querying user data error" ,err)
-        res.status(500).json({error:"Oops...Something went wrong."})
+      res.status(500).json({ error: 'Server error' });
     }
-})
+  });
+  
+
+// app.get("/user/:id", async (req, res) => {
+//     try {
+//       const user = await User.findById(req.params.id).select("-password"); // Exclude password
+//       if (!user) return res.status(404).json({ error: "User not found" });
+  
+//       res.json(user);
+//     } catch (err) {
+//       res.status(500).json({ error: "Server error" });
+//     }
+//   });
+  
 
 /* 
 >> Loging in
@@ -180,25 +202,7 @@ app.get("/products",async (req,res) => {
     }
 })
 
-app.get("/products", async (req, res) => {
-    try {
-        const { category } = req.query; // Get category from query params
 
-        if (!category) {
-            return res.status(400).json({ message: "Category is required" });
-        }
-
-        const products = await Product.find({ category: category });
-
-        if (products.length === 0) {
-            return res.status(404).json({ message: "No products found" });
-        }
-
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ message: "Server Error", error: error.message });
-    }
-});
 
 
 //Searching for a product
@@ -251,6 +255,34 @@ app.post("/products",async (req,res) => {
         res.json({error:"Oops...Something went wrong."}).status(500)
     }
 })
+
+//Updating product
+app.put("/products/:id", async (req, res) => {
+    try {
+        console.log("Received PUT request for ID:", req.params.id);
+        console.log("Request body:", req.body); // Debug request payload
+
+        const { name, price, stock } = req.body;
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id.trim(),  // Trim spaces to avoid ID mismatch
+            { name, price, stock },
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            console.log("Product not found!");
+            return res.status(404).json({ error: "Product not found" });
+        }
+
+        console.log("Product updated successfully:", updatedProduct);
+        res.json(updatedProduct);
+    } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+  
 
 //Deleting product
 //Request body example : {id:1}

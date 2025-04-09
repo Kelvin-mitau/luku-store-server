@@ -1,9 +1,9 @@
 const {model,models} = require("mongoose")
-const { productSchema,transactionSchema,userSchema } = require("./schemas")
+const { productSchema,orderSchema,userSchema } = require("./schemas")
 
 
 const Product = models.Product || model("Product",productSchema)
-const Transaction = models.Transaction || model("Transaction",transactionSchema)
+const Order = models.Order || model("Order",orderSchema)
 const User = models.User || model("User",userSchema)
 
-module.exports = {Product,Transaction,User}
+module.exports = {Product,Order,User}

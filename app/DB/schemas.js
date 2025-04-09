@@ -2,11 +2,10 @@ const {Schema} = require("mongoose")
 
 const productSchema = new Schema(
     {
-    image:{type:Array},
+    image:{type:String},
     name:{type:String,required:true},
     description:{type:String,required:true},
     brand:{type:String,required:true},
-    quantity:{type:Number, default:1},
     sex:{type:String,required:true},
     category:{type:String,required:true},
     price:{type:Number,required:true},
@@ -27,10 +26,12 @@ const userSchema = new Schema(
     }
 ,{timestamps:{createdAt:"createdAt"}})
 
-const transactionSchema = new Schema(
+const orderSchema = new Schema(
     {
-
+        items:[{type:Array,required:true,ref:"Product"}],
+        status:{type:String,default:"pending"},
+        totalAmount:{type:Number,required:true},
     }
 ,{timestamps:{createdAt:"createdAt"}})
 
-module.exports = {productSchema,userSchema,transactionSchema}
+module.exports = {productSchema,userSchema,orderSchema}

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const express =  require("express");
 const passwordEncrypter = require("./middleware/passwordEncrypt");
 const {generateOTP,authenticateOTP} = require("./functions/handleOTP")
-const {User,Product} = require("./DB/models")
+const {User,Product,Order} = require("./DB/models")
 const bcrypt = require("bcrypt"); 
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -297,6 +297,52 @@ app.delete("/products",async (req,res) => {
         res.json({error:"Oops...Something went wrong."}).status(500)
     }
 })
+/* 
+orders
+*/
+app.get("/orders",async (req,res) => {
+    try {
+        const orders = await Order.find().limit(50).populate("items",["image","name","category","price","status"])
+        res.json(orders).status(200)
+    } catch (error) {
+        console.error(error)
+        res.json({error:"Oops...Something went wrong."}).status(500)
+    }
+})
+app.post("/orders",async (req,res) => {
+    try {
+        console.log(req.body)
+        const newOrder = await new Order(req.body)
+        await newOrder.save()
+        res.json({message:`New order has been created`}).status(200)
+    } catch (error) {
+        console.error(error)
+        res.json({error:"Oops...Something went wrong."}).status(500)
+    }
+})
+
+app.put("/orders",async (req,res) => {
+    try {
+        const order = await Order.findByIdAndUpdate(req.body.id,{
+            $set:{...req.body}
+        })
+        
+        res.json({message:`New order has been created`}).status(200)
+    } catch (error) {
+        console.error(error)
+        res.json({error:"Oops...Something went wrong."}).status(500)
+    }
+})
+app.delete("/orders",async (req,res) => {
+    try {
+        await Order.findByIdAndDelete(req.body.id)
+        res.json({message:`Order has been deleted successfully`}).status(200)
+    } catch (error) {
+        console.error(error)
+        res.json({error:"Oops...Something went wrong."}).status(500)
+    }
+})
+
 
 /* 
 >> Processing payment

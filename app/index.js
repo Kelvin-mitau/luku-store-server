@@ -96,6 +96,8 @@ app.get('/users', async (req, res) => {
 
 }
 */
+
+//logging in
 app.post("/auth/sign-in",async (req,res) => {
     try {
         const {identity,password} = await req.body
@@ -107,7 +109,7 @@ app.post("/auth/sign-in",async (req,res) => {
             else {return res.json({error:"You entered incorrent details."}).status(200)}
             return
         }
-         res.json({error:"You entered incorrent details."}).status(200)
+        res.json({error:"You entered incorrent details."}).status(200)
     } catch (error) {
         console.error(error)
         res.json({error:"Oops...Something went wrong."}).status(500)
@@ -126,6 +128,8 @@ request body example:
     password:"1234"
 }
 */
+
+//regis
 app.post("/auth/verify-account-data",async (req,res) => {
     try {
         const {firstName,lastName,password,email,phoneNumber} = await req.body
@@ -141,8 +145,6 @@ app.post("/auth/verify-account-data",async (req,res) => {
             res.json({error:"Phone number is already registered."}).status(400)
             return
         }
-        
-        //Typeof OTP = string
         const OTP = generateOTP()
         console.log(OTP) //Should send otp via email/sms
         res.json({}).status(200)
@@ -164,7 +166,7 @@ app.post("/auth/verify-account-data",async (req,res) => {
     password:"1234"
 }
 */
-
+//Second request after OTP is verified
 app.post("/auth/create-account",passwordEncrypter,async (req,res) => {
     try {
         const reqBody = await req.body 
@@ -268,12 +270,10 @@ app.put("/products/:id", async (req, res) => {
             { name, price, stock },
             { new: true }
         );
-
         if (!updatedProduct) {
             console.log("Product not found!");
             return res.status(404).json({ error: "Product not found" });
         }
-
         console.log("Product updated successfully:", updatedProduct);
         res.json(updatedProduct);
     } catch (error) {
